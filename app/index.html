@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DompetKeluarga — Anggaran Rumah Tangga</title>
+<meta name="description" content="DompetKeluarga: atur pemasukan, pengeluaran, tagihan, dan tujuan tabungan keluarga dalam satu tempat.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true">Rp</span>
+    <div>
+      <h1>DompetKeluarga</h1>
+      <p class="tagline">Anggaran rumah tangga, rapi dan terkendali</p>
+    </div>
+  </div>
+  <div class="month-picker">
+    <label for="monthSelect">Bulan</label>
+    <select id="monthSelect"></select>
+  </div>
+</header>
+
+<nav class="mainnav" aria-label="Navigasi utama">
+  <a href="#/" data-route="dashboard">Beranda</a>
+  <a href="#/anggaran" data-route="anggaran">Anggaran</a>
+  <a href="#/transaksi" data-route="transaksi">Transaksi</a>
+  <a href="#/tagihan" data-route="tagihan">Tagihan</a>
+  <a href="#/tujuan" data-route="tujuan">Tujuan Tabungan</a>
+  <a href="#/laporan" data-route="laporan">Laporan</a>
+</nav>
+
+<main id="app">
+  <!-- ============ DASHBOARD ============ -->
+  <section class="page" id="page-dashboard">
+    <h2>Ringkasan Bulan Ini</h2>
+    <p class="page-sub" id="dashSubtitle"></p>
+    <div class="cards">
+      <article class="card income">
+        <h3>Pemasukan</h3>
+        <p class="big" id="sumIncome">Rp0</p>
+        <p class="note" id="sumIncomeNote"></p>
+      </article>
+      <article class="card expense">
+        <h3>Pengeluaran</h3>
+        <p class="big" id="sumExpense">Rp0</p>
+        <p class="note" id="sumExpenseNote"></p>
+      </article>
+      <article class="card balance">
+        <h3>Sisa Uang</h3>
+        <p class="big" id="sumBalance">Rp0</p>
+        <p class="note" id="sumBalanceNote"></p>
+      </article>
+      <article class="card saving">
+        <h3>Ditabung</h3>
+        <p class="big" id="sumSaving">Rp0</p>
+        <p class="note" id="sumSavingNote"></p>
+      </article>
+    </div>
+
+    <div class="grid-2">
+      <article class="panel">
+        <h3>Pengeluaran per Kategori</h3>
+        <canvas id="chartCategory" width="520" height="260" aria-label="Grafik batang pengeluaran per kategori"></canvas>
+        <p class="hint">Grafik digambar langsung dari data transaksi bulan ini.</p>
+      </article>
+      <article class="panel">
+        <h3>Tagihan Segera Jatuh Tempo</h3>
+        <ul class="bill-list" id="dashBills"></ul>
+        <p><a class="link" href="#/tagihan">Lihat semua tagihan &rarr;</a></p>
+      </article>
+    </div>
+
+    <article class="panel">
+      <h3>Transaksi Terakhir</h3>
+      <table class="tx-table">
+        <thead><tr><th>Tanggal</th><th>Keterangan</th><th>Kategori</th><th class="num">Jumlah</th></tr></thead>
+        <tbody id="dashRecent"></tbody>
+      </table>
+      <p><a class="link" href="#/transaksi">Lihat semua transaksi &rarr;</a></p>
+    </article>
+  </section>
+
+  <!-- ============ ANGGARAN ============ -->
+  <section class="page" id="page-anggaran" hidden>
+    <h2>Anggaran Bulanan</h2>
+    <p class="page-sub">Atur batas belanja tiap kategori. Progress bar menunjukkan seberapa besar anggaran yang sudah terpakai bulan ini.</p>
+    <div class="cards">
+      <article class="card"><h3>Total Anggaran</h3><p class="big" id="budgetTotal">Rp0</p></article>
+      <article class="card"><h3>Sudah Terpakai</h3><p class="big" id="budgetUsed">Rp0</p></article>
+      <article class="card"><h3>Sisa Anggaran</h3><p class="big" id="budgetLeft">Rp0</p></article>
+    </div>
+    <div id="budgetList" class="budget-list"></div>
+    <article class="panel">
+      <h3>Tambah / Ubah Anggaran Kategori</h3>
+      <form id="budgetForm" class="form-inline">
+        <label>Kategori
+          <select id="budgetCategory" required></select>
+        </label>
+        <label>Batas (Rp)
+          <input id="budgetLimit" type="number" min="0" step="1000" placeholder="500000" required>
+        </label>
+        <button type="submit" class="btn primary">Simpan Anggaran</button>
+      </form>
+      <p class="hint">Menyimpan kategori yang sama akan mengganti batas lamanya.</p>
+    </article>
+  </section>
+
+  <!-- ============ TRANSAKSI ============ -->
+  <section class="page" id="page-transaksi" hidden>
+    <h2>Transaksi</h2>
+    <p class="page-sub">Semua pemasukan dan pengeluaran tercatat di sini dan tersimpan otomatis di perangkat Anda.</p>
+    <article class="panel">
+      <h3>Tambah Transaksi</h3>
+      <form id="txForm" class="form-grid">
+        <label>Tanggal <input id="txDate" type="date" required></label>
+        <label>Keterangan <input id="txDesc" type="text" placeholder="cth. Belanja sayur di pasar" required></label>
+        <label>Kategori <select id="txCategory" required></select></label>
+        <label>Jenis
+          <select id="txType"><option value="expense">Pengeluaran</option><option value="income">Pemasukan</option></select>
+        </label>
+        <label>Jumlah (Rp) <input id="txAmount" type="number" min="1" step="100" placeholder="50000" required></label>
+        <button type="submit" class="btn primary">Tambah Transaksi</button>
+      </form>
+    </article>
+    <article class="panel">
+      <h3>Daftar Transaksi</h3>
+      <div class="filters">
+        <label>Cari <input id="filterSearch" type="search" placeholder="Cari keterangan..."></label>
+        <label>Kategori <select id="filterCategory"><option value="">Semua kategori</option></select></label>
+        <label>Jenis
+          <select id="filterType"><option value="">Semua</option><option value="income">Pemasukan</option><option value="expense">Pengeluaran</option></select>
+        </label>
+        <button id="filterReset" class="btn" type="button">Reset Filter</button>
+      </div>
+      <table class="tx-table">
+        <thead><tr><th>Tanggal</th><th>Keterangan</th><th>Kategori</th><th>Jenis</th><th class="num">Jumlah</th><th></th></tr></thead>
+        <tbody id="txList"></tbody>
+      </table>
+      <p class="hint" id="txCount"></p>
+    </article>
+  </section>
+
+  <!-- ============ TAGIHAN ============ -->
+  <section class="page" id="page-tagihan" hidden>
+    <h2>Tagihan &amp; Pengingat</h2>
+    <p class="page-sub">Tagihan rutin bulanan beserta tanggal jatuh temponya. Tandai lunas begitu sudah dibayar.</p>
+    <div class="cards">
+      <article class="card"><h3>Total Tagihan Bulan Ini</h3><p class="big" id="billTotal">Rp0</p></article>
+      <article class="card"><h3>Sudah Dibayar</h3><p class="big" id="billPaid">Rp0</p></article>
+      <article class="card"><h3>Belum Dibayar</h3><p class="big" id="billUnpaid">Rp0</p></article>
+    </div>
+    <article class="panel">
+      <h3>Tambah Tagihan</h3>
+      <form id="billForm" class="form-grid">
+        <label>Nama tagihan <input id="billName" type="text" placeholder="cth. Listrik PLN" required></label>
+        <label>Jumlah (Rp) <input id="billAmount" type="number" min="1" step="100" placeholder="350000" required></label>
+        <label>Jatuh tempo (tanggal) <input id="billDue" type="number" min="1" max="31" placeholder="20" required></label>
+        <button type="submit" class="btn primary">Tambah Tagihan</button>
+      </form>
+    </article>
+    <ul class="bill-list big" id="billList"></ul>
+  </section>
+
+  <!-- ============ TUJUAN ============ -->
+  <section class="page" id="page-tujuan" hidden>
+    <h2>Tujuan Tabungan</h2>
+    <p class="page-sub">Setiap rupiah yang disisihkan mendekatkan keluarga ke tujuannya.</p>
+    <div class="goal-grid" id="goalList"></div>
+    <article class="panel">
+      <h3>Buat Tujuan Baru</h3>
+      <form id="goalForm" class="form-grid">
+        <label>Nama tujuan <input id="goalName" type="text" placeholder="cth. Dana Darurat" required></label>
+        <label>Target (Rp) <input id="goalTarget" type="number" min="1" step="1000" placeholder="10000000" required></label>
+        <label>Target tanggal <input id="goalDate" type="date"></label>
+        <button type="submit" class="btn primary">Buat Tujuan</button>
+      </form>
+    </article>
+  </section>
+
+  <!-- ============ LAPORAN ============ -->
+  <section class="page" id="page-laporan" hidden>
+    <h2>Laporan</h2>
+    <p class="page-sub">Perbandingan pemasukan dan pengeluaran, serta pengeluaran per kategori dan per bulan.</p>
+    <div class="grid-2">
+      <article class="panel">
+        <h3>Pengeluaran per Kategori (6 bulan terakhir)</h3>
+        <canvas id="chartReportCategory" width="520" height="280" aria-label="Grafik batang pengeluaran per kategori"></canvas>
+      </article>
+      <article class="panel">
+        <h3>Pemasukan vs Pengeluaran per Bulan</h3>
+        <canvas id="chartReportMonthly" width="520" height="280" aria-label="Grafik batang pemasukan dan pengeluaran per bulan"></canvas>
+      </article>
+    </div>
+    <article class="panel">
+      <h3>Ringkasan 6 Bulan Terakhir</h3>
+      <table class="tx-table">
+        <thead><tr><th>Bulan</th><th class="num">Pemasukan</th><th class="num">Pengeluaran</th><th class="num">Selisih</th><th class="num">Tingkat Tabung</th></tr></thead>
+        <tbody id="reportTable"></tbody>
+      </table>
+    </article>
+  </section>
+</main>
+
+<footer class="footer">
+  <p>DompetKeluarga — data tersimpan lokal di perangkat Anda (localStorage). Tidak ada data yang dikirim ke server mana pun.</p>
+  <p><button id="resetData" class="btn small" type="button">Kembalikan data contoh</button></p>
+</footer>
+
+<script src="data.js"></script>
+<script src="main.js"></script>
+</body>
+</html>
